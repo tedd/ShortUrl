@@ -1,11 +1,11 @@
 # ShortUrl
-ASP.Net Core implementation of an URL shortener.
+ASP.Net Core C¤ implementation of an URL shortener much like "tinyurl.com", "bitl.y", "goo.gl", "ow.ly", etc...
 
 ## Version 1
 This is version 1. It only has a WebAPI and no webpage.
 It comes with near 100% unit test coverage.
 
-Processing time per forward is low. Difficult to measure exactly, 
+If is fast, responds within a few milliseconds.
 
 ## Config
 
