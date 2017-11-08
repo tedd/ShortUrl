@@ -46,3 +46,8 @@ Change appsettings.json:
 
 ### Visit URL
 Simply visit URL returned from Create operation to be forwarded.
+
+# HTTPS
+You may want to add automatic forwarding to HTTPS with support for letsencrypt:
+
+https://blog.tedd.no/2017/05/09/iis-redirect-http-to-https-but-allow-lets-encrypt/
