@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -149,5 +151,33 @@ namespace Tedd.ShortUrl.Test
         //    var response2 = await _client.GetAsync($"/{falseKey}");
         //    Assert.True(response2.StatusCode == HttpStatusCode.NotFound);
         //}
+
+        [Fact]
+        public async Task CreateAndVisitMuch()
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var count = 10000000;
+            var created = new (AdminCreateRequestModel request, AdminCreateResponseModel response)[count];
+            Parallel.For(0, count, async (i) =>
+            {
+                created[i] = await CreateUrl();
+            });
+
+            var createTimeUsed = stopwatch.ElapsedMilliseconds;
+            stopwatch.Restart();
+
+            // Test URL
+            Parallel.For((long) 0, count, async (i) =>
+            {
+                var data = created[i].request;
+                var response1Object = created[i].response;
+                var response2 = await _client.GetAsync($"/{response1Object.Key}");
+                Assert.True(response2.StatusCode == HttpStatusCode.Redirect);
+                Assert.True(response2.Headers.Location.AbsoluteUri == new Uri(data.Url).AbsoluteUri);
+            });
+            var visitTimeUsed = stopwatch.ElapsedMilliseconds;
+
+        }
     }
 }
