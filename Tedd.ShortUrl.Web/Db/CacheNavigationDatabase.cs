@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Tedd.ShortUrl.Web.Models;
 using Tedd.ShortUrl.Web.Services;
-using Microsoft.Extensions.Options;
 
-namespace Tedd.ShortUrl.Web.NavDb
+namespace Tedd.ShortUrl.Web.Db
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public class CacheNavigationDatabase : INavigationDatabase

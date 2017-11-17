@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Tedd.ShortUrl.Web.Models;
 
-namespace Tedd.ShortUrl.Web.NavDb
+namespace Tedd.ShortUrl.Web.Db
 {
     public interface INavigationDatabase
     {

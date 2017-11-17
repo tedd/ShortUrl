@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Tedd.ShortUrl.Web.Models;
-using Tedd.ShortUrl.Web.NavDb;
 using Tedd.ShortUrl.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite.Internal.UrlActions;
 using Microsoft.Extensions.Options;
+using Tedd.ShortUrl.Web.Db;
 
 namespace Tedd.ShortUrl.Web.Controllers
 {
@@ -26,7 +26,7 @@ namespace Tedd.ShortUrl.Web.Controllers
             _managedConfig = managedConfig.Value;
         }
 
-        [HttpPut("Create")]
+        [HttpPost("Create")]
         public async Task<AdminCreateResponseModel> Create([FromBody] AdminCreateRequestModel model)
         {
             AccessTokenDataModel atd;
@@ -66,18 +66,18 @@ namespace Tedd.ShortUrl.Web.Controllers
         }
 
         [HttpGet("Upgrade/{key}")]
-        public async Task<(bool Success, string ErrorMessage)> Upgrade(string key)
+        public async Task<AdminUpgradeResponseModel> Upgrade(string key)
         {
             AccessTokenDataModel atd;
             if (!_managedConfig.AccessTokens.TryGetValue(key, out atd))
-                return ( Success: false, ErrorMessage: "Access denied: Invalid key" );
+                return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Invalid key" };
 
             if (!atd.Admin)
-                return (Success: false, ErrorMessage: "Access denied: Not admin");
+                return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Not admin" };
 
             await _navigationDatabase.Upgrade();
 
-            return (Success: true, ErrorMessage: "Done"); ;
+            return new AdminUpgradeResponseModel() { Success = true, ErrorMessage = null }; ;
         }
     }
 }

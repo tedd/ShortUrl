@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Tedd.ShortUrl.Web.Db;
-using Tedd.ShortUrl.Web.NavDb;
 using Tedd.ShortUrl.Web.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

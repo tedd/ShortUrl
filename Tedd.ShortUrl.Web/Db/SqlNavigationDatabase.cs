@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Tedd.ShortUrl.Web.Db;
-using Tedd.ShortUrl.Web.Models;
-using Tedd.ShortUrl.Web.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Tedd.ShortUrl.Web.Models;
+using Tedd.ShortUrl.Web.Services;
 
-namespace Tedd.ShortUrl.Web.NavDb
+namespace Tedd.ShortUrl.Web.Db
 {
     public class SqlNavigationDatabase : INavigationDatabase
     {

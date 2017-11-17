@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Tedd.ShortUrl.Web.NavDb;
 using Tedd.ShortUrl.Web.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Tedd.ShortUrl.Web.Db;
 
 namespace Tedd.ShortUrl.Web.Controllers
 {
