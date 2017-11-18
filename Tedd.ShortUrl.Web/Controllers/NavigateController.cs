@@ -21,15 +21,14 @@ namespace Tedd.ShortUrl.Web.Controllers
             _database = database;
         }
 
-        //[Route("{*key}")]
         [ResponseCache(Duration = 60 * 60 * 48, Location = ResponseCacheLocation.Client)]
         [HttpGet("/{key}")]
         public async Task<IActionResult> NavigateTo(string key)
         {
             var data = await _database.GetData(key);
-            if (data != null && (!data.Expires.HasValue || DateTime.UtcNow < data.Expires.Value))
+            if (data != null && (!data.ExpiresUtc.HasValue || DateTime.UtcNow < data.ExpiresUtc.Value))
             {
-                await _database.LogAccess(key);
+                await _database.LogAccess(key, Request.HttpContext.Connection.RemoteIpAddress);
                 return Redirect(data.Url);
             }
 

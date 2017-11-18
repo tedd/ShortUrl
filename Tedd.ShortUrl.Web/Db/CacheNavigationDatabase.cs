@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Tedd.ShortUrl.Web.Models;
@@ -25,14 +26,13 @@ namespace Tedd.ShortUrl.Web.Db
             return ret;
         }
 
-        public async Task<bool> LogAccess(string urlId)
+        public async Task<bool> LogAccess(string urlId, IPAddress connectionRemoteIpAddress)
         {
             ShortUrlModel ret = null;
             lock (_cache)
                 _cache.TryGetValue(urlId, out ret);
-            if (!ret.FirstVisit.HasValue)
-                ret.FirstVisit = DateTime.Now;
-            ret.LastVisit = DateTime.Now;
+            //if (!ret.FirstVisitUtc.HasValue)
+            //    ret.FirstVisitUtc = DateTime.Now;
 
             return true;
         }

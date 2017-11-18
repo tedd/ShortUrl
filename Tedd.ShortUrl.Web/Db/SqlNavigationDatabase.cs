@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -44,15 +45,21 @@ namespace Tedd.ShortUrl.Web.Db
             return (Success: false, Key: null);
         }
 
-        public async Task<bool> LogAccess(string urlId)
+        public async Task<bool> LogAccess(string urlId, IPAddress remoteIp)
         {
             var data = await _shortUrlDbContext.ShortUrl.Where(su => su.Key == urlId).FirstOrDefaultAsync();
             if (data == null)
                 return false;
 
-            if (!data.FirstVisit.HasValue)
-                data.FirstVisit = DateTime.Now;
-            data.LastVisit = DateTime.Now;
+            //if (!data.FirstVisitUtc.HasValue)
+            //    data.FirstVisitUtc = DateTime.Now;
+
+            var log = new ShortUrlLogEntryModel();
+            log.ShortUrlId = data.Id;
+            log.AccessTimeUtc = DateTime.UtcNow;
+            log.ClientIp = remoteIp?.GetAddressBytes();
+
+            await _shortUrlDbContext.ShortUrlVisitLog.AddAsync(log);
 
             await _shortUrlDbContext.SaveChangesAsync();
 

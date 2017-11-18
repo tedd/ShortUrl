@@ -15,9 +15,36 @@ using Xunit;
 
 namespace Tedd.ShortUrl.Test
 {
+    public static class ShortUrlTextExtensions {
+    public static async Task<(AdminCreateRequestModel request, AdminCreateResponseModel response)> CreateUrl(this HttpClient client, string testAccessToken)
+    {
+        // Arrange
+
+
+        // Create URL
+        var data = new AdminCreateRequestModel()
+        {
+            AccessToken = testAccessToken,
+            Expires = DateTime.Now.AddHours(1),
+            MetaData = "123",
+            Url = "https://www.google.com"
+        };
+
+        var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+        var response1 = await client.PostAsync("/Admin/Create", content);
+        response1.EnsureSuccessStatusCode();
+        var response1String = await response1.Content.ReadAsStringAsync();
+        var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
+        Assert.True(response1Object.Success);
+        Assert.True(!string.IsNullOrEmpty(response1Object.Key));
+        Assert.True(response1Object.Key.Length > 4);
+        return (request: data, response: response1Object);
+    }
+}
     public class ShortUrlTest
     {
-        private string testAccessToken = "$$TESTTOKEN$$CHANGEME$$";
+        private string testAccessToken = "$$TESTTOKEN$!!$CHANGEME$$";
         private TestServer _server;
         private HttpClient _client;
 
@@ -29,33 +56,12 @@ namespace Tedd.ShortUrl.Test
         }
 
 
-        private async Task<(AdminCreateRequestModel request, AdminCreateResponseModel response)> CreateUrl()
-        {
-            // Create URL
-            var data = new AdminCreateRequestModel()
-            {
-                AccessToken = testAccessToken,
-                Expires = DateTime.Now.AddHours(1),
-                MetaData = "123",
-                Url = "https://www.google.com"
-            };
 
-            var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-
-            var response1 = await _client.PutAsync("/Admin/Create", content);
-            response1.EnsureSuccessStatusCode();
-            var response1String = await response1.Content.ReadAsStringAsync();
-            var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
-            Assert.True(response1Object.Success);
-            Assert.True(!string.IsNullOrEmpty(response1Object.Key));
-            Assert.True(response1Object.Key.Length > 4);
-            return (request: data, response: response1Object);
-        }
 
         [Fact]
         public async Task CreateAndVisit()
         {
-            var (data, response1Object) = await CreateUrl();
+            var (data, response1Object) = await _client.CreateUrl(testAccessToken);
 
             // Test URL
             var response2 = await _client.GetAsync($"/{response1Object.Key}");
@@ -66,7 +72,7 @@ namespace Tedd.ShortUrl.Test
         [Fact]
         public async Task CreateAndGet()
         {
-            var (data, response1Object) = await CreateUrl();
+            var (data, response1Object) = await _client.CreateUrl(testAccessToken);
 
             // Test URL
 
@@ -91,7 +97,7 @@ namespace Tedd.ShortUrl.Test
 
             var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
-            var response1 = await _client.PutAsync("/Admin/Create", content);
+            var response1 = await _client.PostAsync("/Admin/Create", content);
             response1.EnsureSuccessStatusCode();
             var response1String = await response1.Content.ReadAsStringAsync();
             var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
@@ -116,7 +122,7 @@ namespace Tedd.ShortUrl.Test
         [Fact]
         public async Task GetAccessDenied()
         {
-            var (data, response1Object) = await CreateUrl();
+            var (data, response1Object) = await _client.CreateUrl(testAccessToken);
 
             var response2 = await _client.GetAsync($"/Admin/Get/{response1Object.Key}?AccessToken=INVALID" );
             response2.EnsureSuccessStatusCode();
@@ -156,28 +162,76 @@ namespace Tedd.ShortUrl.Test
         public async Task CreateAndVisitMuch()
         {
             var stopwatch = new Stopwatch();
+            var createCount = 10000;
+            var visitCount = createCount * 10;
+            var created = new (AdminCreateRequestModel request, AdminCreateResponseModel response)[createCount];
+            var cc1 = createCount / 2;
+            var cc2 = createCount - cc1;
             stopwatch.Start();
-            var count = 10000000;
-            var created = new (AdminCreateRequestModel request, AdminCreateResponseModel response)[count];
-            Parallel.For(0, count, async (i) =>
+            Parallel.For(0, cc1,() =>
+                {
+                    var server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
+                    var client = server.CreateClient();
+                    return (Server:server, Client:client);
+                },
+                (i, pls, sc) =>
+            //for (var i = 0; i< cc1;i++)
             {
-                created[i] = await CreateUrl();
-            });
+                created[i] = sc.Client.CreateUrl(testAccessToken).Result;
+                return sc;
+            }, (sc) =>
+                {
+                    sc.Client.Dispose();
+                    sc.Server.Dispose();
+                });
+            var cc1TimeUsed = stopwatch.ElapsedMilliseconds;
+            Trace.WriteLine($"Round 1: Create time used for {cc1} urls: {cc1TimeUsed} ms total, {cc1TimeUsed/cc1} ms per create");
+            stopwatch.Restart();
+            Parallel.For(cc1, cc2, () =>
+                {
+                    var server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
+                    var client = server.CreateClient();
+                    return (Server: server, Client: client);
+                },
+                (i, pls, sc) =>
+                    //for (var i = 0; i< cc1;i++)
+                {
+                    created[i] = sc.Client.CreateUrl(testAccessToken).Result;
+                    return sc;
+                }, (sc) =>
+                {
+                    sc.Client.Dispose();
+                    sc.Server.Dispose();
+                });
+            var cc2TimeUsed = stopwatch.ElapsedMilliseconds;
+            Trace.WriteLine($"Round 2: Create time used for {cc2} urls: {cc2TimeUsed} ms total, {cc2TimeUsed/cc2} ms per create");
 
             var createTimeUsed = stopwatch.ElapsedMilliseconds;
+            Trace.WriteLine($"Create time used for {createCount} visits: {createTimeUsed} ms");
+            var diffMs = Math.Abs((cc1TimeUsed / cc1) - (cc2TimeUsed / cc2));
+            Trace.WriteLine($"Differential time between first and second batch: {diffMs} ms");
+            Assert.True(diffMs < 10);
+            //Assert.True(createTimeUsed < 1000);
+
             stopwatch.Restart();
 
             // Test URL
-            Parallel.For((long) 0, count, async (i) =>
+            var rnd = new Random();
+            
+            //Parallel.For((long) 0, visitCount, async (i) =>
+            for (var i = 0; i<visitCount;i++)
             {
-                var data = created[i].request;
-                var response1Object = created[i].response;
+                var c = rnd.Next(0, createCount);
+                var data = created[c].request;
+                var response1Object = created[c].response;
                 var response2 = await _client.GetAsync($"/{response1Object.Key}");
                 Assert.True(response2.StatusCode == HttpStatusCode.Redirect);
                 Assert.True(response2.Headers.Location.AbsoluteUri == new Uri(data.Url).AbsoluteUri);
-            });
+            }//);
             var visitTimeUsed = stopwatch.ElapsedMilliseconds;
+            Trace.WriteLine($"Visit time used for {visitCount} visits: {visitTimeUsed} ms");
 
+            //Assert.True(visitTimeUsed < 1000);
         }
     }
 }

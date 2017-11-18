@@ -21,8 +21,6 @@ namespace Tedd.ShortUrl.Web
         //public Startup(IConfiguration configuration)
         //{
         //    Configuration = configuration;
-
-        //    AutoMapperBootstrapper.Initialize();
         //}
         public Startup(IHostingEnvironment env)
         {

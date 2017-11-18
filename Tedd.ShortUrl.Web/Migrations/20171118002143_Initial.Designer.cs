@@ -11,9 +11,10 @@ using Tedd.ShortUrl.Web.Db;
 namespace Tedd.ShortUrl.Web.Migrations
 {
     [DbContext(typeof(ShortUrlDbContext))]
-    partial class ShortUrlDbContextModelSnapshot : ModelSnapshot
+    [Migration("20171118002143_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

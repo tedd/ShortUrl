@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Tedd.ShortUrl.Web.Models
 {
     public class ShortUrlModel
     {
         [Key]
+        public long Id { get; set; }
+
         [MaxLength(10)]
         public string Key { get; set; }
         [Required]
@@ -16,9 +21,11 @@ namespace Tedd.ShortUrl.Web.Models
         [MaxLength(36)]
         public string CreatorAccessToken { get; set; }
         [Required]
-        public DateTime Created { get; set; } = DateTime.Now;
-        public DateTime? Expires { get; set; }
-        public DateTime? FirstVisit { get; set; }
-        public DateTime? LastVisit { get; set; }
+        [Column(TypeName = "smalldatetime")]
+        public DateTime CreatedUtc { get; set; } = DateTime.Now;
+        [Column(TypeName = "smalldatetime")]
+        public DateTime? ExpiresUtc { get; set; }
+
+        public List<ShortUrlLogEntryModel> VisitLog { get; set; }
     }
 }
