@@ -32,18 +32,18 @@ POST /Admin/Create
 ```
 
 Note:
-* `Expires` is optional.
+* `Expires` is optional, and should be given in UTC.
 * `$URL$` in the URL will be replaced with the shorturl key. You can use this to pass reference for target solutin to go back into ShortUrl system to pick up metadata. This way metadata can be passed in URL without going via user browser.
 
 #### Response
 ```json
 {
-	"Success": true,
-	"Key": "abc123",
-	"ShortUrl": "http://myshorturlservice.com/abc123",
-	"Url": "http://www.stackoverflow.com/",
-	"MetaData": "Put anything here, for example json",
-	"Expires": "2018-01-01 15:30"
+	"success": true,
+	"key": "abc123",
+	"shortUrl": "http://myshorturlservice.com/abc123",
+	"url": "http://www.stackoverflow.com/",
+	"metaData": "Put anything here, for example json",
+	"expiresUtc": "2018-01-01 15:30"
 }
 ```
 
@@ -51,10 +51,10 @@ Note:
 ```json
 GET /Admin/Get/key?AccessToken=$$TESTTOKEN$!!$CHANGEME$$
 {
-	"AccessToken": "$$TESTTOKEN$!!$CHANGEME$$"",
-	"Url": "http://www.stackoverflow.com/$URL$",
-	"MetaData": "Put anything here, for example json",
-	"Expires": "2018-01-01 15:30"
+	"accessToken": "$$TESTTOKEN$!!$CHANGEME$$"",
+	"url": "http://www.stackoverflow.com/$URL$",
+	"metaData": "Put anything here, for example json",
+	"expiresUtc": "2018-01-01 15:30"
 }
 ```
 
