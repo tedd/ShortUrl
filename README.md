@@ -51,7 +51,7 @@ Note:
 ```json
 GET /Admin/Get/key?AccessToken=$$TESTTOKEN$!!$CHANGEME$$
 {
-	"accessToken": "$$TESTTOKEN$!!$CHANGEME$$"",
+	"accessToken": "$$TESTTOKEN$!!$CHANGEME$$",
 	"url": "http://www.stackoverflow.com/$URL$",
 	"metaData": "Put anything here, for example json",
 	"expiresUtc": "2018-01-01 15:30"
