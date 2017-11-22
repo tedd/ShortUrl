@@ -27,7 +27,7 @@ POST /Admin/Create
 	"AccessToken": "$$TESTTOKEN$!!$CHANGEME$$",
 	"Url": "http://mysite.com/$URL$",
 	"MetaData": "Put anything here, for example json",
-	"DateTime": "2018-01-01 15:30"
+	"Expires": "2018-01-01 15:30"
 }
 ```
 
