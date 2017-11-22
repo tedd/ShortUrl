@@ -16,6 +16,7 @@ namespace Tedd.ShortUrl.Web.Db
 
         public DbSet<ShortUrlModel> ShortUrl { get; set; }
         public DbSet<ShortUrlLogEntryModel> ShortUrlVisitLog { get; set; }
+        public DbSet<ShortUrlTokenModel> ShortUrlAccessTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,13 +25,22 @@ namespace Tedd.ShortUrl.Web.Db
                 .IsUnique();
 
             modelBuilder.Entity<ShortUrlLogEntryModel>()
+                .HasIndex(su => su.ShortUrlId);
+
+            modelBuilder.Entity<ShortUrlTokenModel>()
+                .HasIndex(su => su.CreatorAccessToken)
+                .IsUnique();
+
+            modelBuilder.Entity<ShortUrlModel>()
+                .HasOne(su => su.CreatorAccessToken)
+                .WithMany(su => su.ShortUrls)
+                .HasForeignKey(su => su.CreatorAccessTokenId);
+
+            modelBuilder.Entity<ShortUrlLogEntryModel>()
                 .HasOne(su => su.ShortUrl)
                 .WithMany(su => su.VisitLog)
                 .HasForeignKey(su => su.ShortUrlId);
 
-            modelBuilder.Entity<ShortUrlLogEntryModel>()
-                .HasIndex(su => su.ShortUrlId)
-                ;
         }
     }
 }

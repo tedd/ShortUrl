@@ -66,9 +66,27 @@ namespace Tedd.ShortUrl.Web.Db
             return true;
         }
 
-        public Task Upgrade()
+        public async Task Upgrade()
         {
-            return _shortUrlDbContext.Database.MigrateAsync();
+            await _shortUrlDbContext.Database.MigrateAsync();
+
+            // We add a test user if database is empty.
+            if (_shortUrlDbContext.ShortUrlAccessTokens.ToList().Count == 0)
+            {
+                _shortUrlDbContext.ShortUrlAccessTokens.Add(new ShortUrlTokenModel()
+                {
+                    CreatorAccessToken = "$$TESTTOKEN$!!$CHANGEME$$",
+                    Enabled = true,
+                    Admin = false
+                });
+                await _shortUrlDbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<ShortUrlTokenModel> GetAccessToken(string accessToken)
+        {
+            // TODO: This can be cached for a few minutes...?
+            return await _shortUrlDbContext.ShortUrlAccessTokens.Where(at => at.CreatorAccessToken == accessToken && at.Enabled).FirstAsync();
         }
     }
 }

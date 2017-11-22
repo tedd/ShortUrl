@@ -3,6 +3,5 @@
     public class AccessTokenDataModel
     {
         public bool Enabled { get; set; } = true;
-        public bool Admin { get; set; }
     }
 }

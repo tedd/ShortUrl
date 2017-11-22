@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Tedd.ShortUrl.Web.Services;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +16,8 @@ namespace Tedd.ShortUrl.Web.Controllers
     public class NavigateController : Controller
     {
         private readonly INavigationDatabase _database;
-     
+        public static readonly Regex UrlKeyReplacementRegex = new Regex(@"\$KEY\$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public NavigateController(INavigationDatabase database)
         {
             _database = database;
@@ -29,7 +31,8 @@ namespace Tedd.ShortUrl.Web.Controllers
             if (data != null && (!data.ExpiresUtc.HasValue || DateTime.UtcNow < data.ExpiresUtc.Value))
             {
                 await _database.LogAccess(key, Request.HttpContext.Connection.RemoteIpAddress);
-                return Redirect(data.Url);
+                var url = UrlKeyReplacementRegex.Replace(data.Url, key);
+                return Redirect(url);
             }
 
             return View("UrlNotFound", key);

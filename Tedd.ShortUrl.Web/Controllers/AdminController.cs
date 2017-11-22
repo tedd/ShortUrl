@@ -29,16 +29,18 @@ namespace Tedd.ShortUrl.Web.Controllers
         [HttpPost("Create")]
         public async Task<AdminCreateResponseModel> Create([FromBody] AdminCreateRequestModel model)
         {
-            AccessTokenDataModel atd;
-            if (string.IsNullOrEmpty(model.AccessToken) || !_managedConfig.AccessTokens.TryGetValue(model.AccessToken, out atd))
+            var accessToken = await _navigationDatabase.GetAccessToken(model.AccessToken);
+            if (accessToken == null || !accessToken.Enabled)
                 return new AdminCreateResponseModel() { Success = false };
 
 
             // Create a URL forward entry
             var data = Mapper.Map<ShortUrlModel>(model);
-            data.CreatorAccessToken = model.AccessToken;
+            data.CreatorAccessTokenId = accessToken.Id;
             var result = await _navigationDatabase.AddData(data);
             var ret = Mapper.Map<AdminCreateResponseModel>(data);
+            ret.Url = NavigateController.UrlKeyReplacementRegex.Replace(ret.Url, ret.Key);
+            ret.ShortUrl = new Uri(Request.Scheme + "://" + Request.Host.Value + Request.PathBase + "/" + ret.Key).ToString();
             //ret.Key = result.Key;
             ret.Success = result.Success;
 
@@ -48,13 +50,12 @@ namespace Tedd.ShortUrl.Web.Controllers
         [HttpGet("Get/{key}")]
         public async Task<AdminGetResponseModel> Get(AdminGetRequestModel model)
         {
-            AccessTokenDataModel atd;
-            if (!_managedConfig.AccessTokens.TryGetValue(model.AccessToken, out atd))
+            var accessToken = await _navigationDatabase.GetAccessToken(model.AccessToken);
+            if (accessToken == null || !accessToken.Enabled)
                 return new AdminGetResponseModel() { Success = false };
 
             // Get data on existing URL forward entry
             var result = await _navigationDatabase.GetData(model.Key);
-
 
             var ret = new AdminGetResponseModel()
             {
@@ -68,12 +69,17 @@ namespace Tedd.ShortUrl.Web.Controllers
         [HttpGet("Upgrade/{key}")]
         public async Task<AdminUpgradeResponseModel> Upgrade(string key)
         {
-            AccessTokenDataModel atd;
-            if (!_managedConfig.AccessTokens.TryGetValue(key, out atd))
-                return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Invalid key" };
+            // Either UpgradePassword from config matches
+            if (_managedConfig.UpgradePassword != key)
+            {
+                // Or access token from SQL must have admin rights
+                var accessToken = await _navigationDatabase.GetAccessToken(key);
+                if (accessToken == null || !accessToken.Enabled)
+                    return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Invalid key" };
 
-            if (!atd.Admin)
-                return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Not admin" };
+                if (!accessToken.Admin)
+                    return new AdminUpgradeResponseModel() { Success = false, ErrorMessage = "Access denied: Not admin" };
+            }
 
             await _navigationDatabase.Upgrade();
 

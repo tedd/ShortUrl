@@ -10,7 +10,7 @@ namespace Tedd.ShortUrl.Web.Utils
         private const string ValidChars = "abcdefghjkmnprstwxz2345789"; // Letters and numbers that are not easily mixed with others when reading
         //private const string ValidChars = "ABCDEFHJKLMNPRSTUWXYZ2345789";
         private static readonly Dictionary<long, bool> ValidCharLookup = new Dictionary<long, bool>();
-        private static readonly Random Rnd = new Random();
+        private static readonly Tedd.MoreRandom.Random Rnd = new Tedd.MoreRandom.Random();
 
         static KeyGenerator()
         {
@@ -22,9 +22,11 @@ namespace Tedd.ShortUrl.Web.Utils
         public static string Generate(int length)
         {
             var ret = new char[length];
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
-                var c = Rnd.Next(0, ValidChars.Length);
+                int c;
+                lock (Rnd)
+                    c = Rnd.Next(0, ValidChars.Length);
                 ret[i] = ValidChars[c];
             }
             return new string(ret);

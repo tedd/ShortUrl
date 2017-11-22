@@ -41,16 +41,17 @@ namespace Tedd.ShortUrl.Web
             services.AddMvc();
             services.AddResponseCaching();
 
+            var connection = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<ShortUrlDbContext>(options => options.UseSqlServer(connection));
+
             //services.AddSingleton<INavigationDatabase, CacheNavigationDatabase>();
-            services.AddSingleton<INavigationDatabase, SqlNavigationDatabase>();
+            services.AddScoped<INavigationDatabase, SqlNavigationDatabase>();
 
             //services.AddSingleton<ManagedConfig, ManagedConfig>();
             // Register the IConfiguration instance which MyOptions binds against.
             services.Configure<ManagedConfig>(Configuration);
 
-            var connection = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<ShortUrlDbContext>(options => options.UseSqlServer(connection));
-
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

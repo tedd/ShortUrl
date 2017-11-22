@@ -42,6 +42,11 @@ namespace Tedd.ShortUrl.Web.Db
             throw new NotImplementedException();
         }
 
+        public Task<ShortUrlTokenModel> GetAccessToken(string accessToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<(bool Success, string Key)> AddData(ShortUrlModel data)
         {
             for (int i = 0; i < 100; i++)

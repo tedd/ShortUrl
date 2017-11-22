@@ -10,6 +10,6 @@ namespace Tedd.ShortUrl.Web.Services
     public class ManagedConfig
     {
         public int KeyLength { get; set; }
-        public Dictionary<string, AccessTokenDataModel> AccessTokens { get; set; }
+        public string UpgradePassword { get; set; }
     }
 }

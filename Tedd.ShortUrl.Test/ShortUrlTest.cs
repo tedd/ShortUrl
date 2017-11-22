@@ -12,44 +12,49 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Newtonsoft.Json;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Tedd.ShortUrl.Test
 {
-    public static class ShortUrlTextExtensions {
-    public static async Task<(AdminCreateRequestModel request, AdminCreateResponseModel response)> CreateUrl(this HttpClient client, string testAccessToken)
+    public static class ShortUrlTextExtensions
     {
-        // Arrange
-
-
-        // Create URL
-        var data = new AdminCreateRequestModel()
+        public static async Task<(AdminCreateRequestModel request, AdminCreateResponseModel response)> CreateUrl(this HttpClient client, string testAccessToken)
         {
-            AccessToken = testAccessToken,
-            Expires = DateTime.Now.AddHours(1),
-            MetaData = "123",
-            Url = "https://www.google.com"
-        };
+            // Arrange
 
-        var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
 
-        var response1 = await client.PostAsync("/Admin/Create", content);
-        response1.EnsureSuccessStatusCode();
-        var response1String = await response1.Content.ReadAsStringAsync();
-        var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
-        Assert.True(response1Object.Success);
-        Assert.True(!string.IsNullOrEmpty(response1Object.Key));
-        Assert.True(response1Object.Key.Length > 4);
-        return (request: data, response: response1Object);
+            // Create URL
+            var data = new AdminCreateRequestModel()
+            {
+                AccessToken = testAccessToken,
+                Expires = DateTime.Now.AddHours(1),
+                MetaData = "123",
+                Url = "https://www.google.com/?q=$key$"
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+
+            var response1 = await client.PostAsync("/Admin/Create", content);
+            response1.EnsureSuccessStatusCode();
+            var response1String = await response1.Content.ReadAsStringAsync();
+            var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
+            Assert.True(response1Object.Success);
+            Assert.True(!string.IsNullOrEmpty(response1Object.Key));
+            Assert.True(response1Object.Key.Length > 4);
+            Assert.True(response1Object.Url.ToUpperInvariant().Contains(response1Object.Key.ToUpperInvariant()));
+            return (request: data, response: response1Object);
+        }
     }
-}
     public class ShortUrlTest
     {
-        private string testAccessToken = "$$TESTTOKEN$!!$CHANGEME$$";
+        private readonly ITestOutputHelper _output;
+        private string testAccessToken = "$$TESTTOKEN$!!$CHANGEME$$"; // This one must be created in database!
         private TestServer _server;
         private HttpClient _client;
 
-        public ShortUrlTest()
+        public ShortUrlTest(ITestOutputHelper output)
         {
+            _output = output;
             // Arrange
             _server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
             _client = _server.CreateClient();
@@ -76,12 +81,12 @@ namespace Tedd.ShortUrl.Test
 
             // Test URL
 
-            var response2 = await _client.GetAsync($"/Admin/Get/{response1Object.Key}?AccessToken="+data.AccessToken);
+            var response2 = await _client.GetAsync($"/Admin/Get/{response1Object.Key}?AccessToken=" + data.AccessToken);
             response2.EnsureSuccessStatusCode();
             var response2String = await response2.Content.ReadAsStringAsync();
             var response2Object = JsonConvert.DeserializeObject<AdminGetResponseModel>(response2String);
             Assert.True(response2Object.Success);
-//            Assert.True(response2Object.ShortUrlModel.);
+            //            Assert.True(response2Object.ShortUrlModel.);
         }
 
         private async Task CreateAccessDenied()
@@ -104,13 +109,13 @@ namespace Tedd.ShortUrl.Test
             Assert.False(response1Object.Success);
             Assert.True(string.IsNullOrEmpty(response1Object.Key));
             Assert.True(string.IsNullOrEmpty(response1Object.Key));
-            
+
         }
 
 
         [Fact]
         public async Task GetNotExist()
-        {          
+        {
             var response2 = await _client.GetAsync($"/Admin/Get/FAKE?AccessToken=" + testAccessToken);
             response2.EnsureSuccessStatusCode();
             var response2String = await response2.Content.ReadAsStringAsync();
@@ -124,7 +129,7 @@ namespace Tedd.ShortUrl.Test
         {
             var (data, response1Object) = await _client.CreateUrl(testAccessToken);
 
-            var response2 = await _client.GetAsync($"/Admin/Get/{response1Object.Key}?AccessToken=INVALID" );
+            var response2 = await _client.GetAsync($"/Admin/Get/{response1Object.Key}?AccessToken=INVALID");
             response2.EnsureSuccessStatusCode();
             var response2String = await response2.Content.ReadAsStringAsync();
             var response2Object = JsonConvert.DeserializeObject<AdminGetResponseModel>(response2String);
@@ -132,7 +137,7 @@ namespace Tedd.ShortUrl.Test
             //            Assert.True(response2Object.ShortUrlModel.);
         }
 
-   
+
 
         [Fact]
         public async Task KeyNotFound()
@@ -144,7 +149,7 @@ namespace Tedd.ShortUrl.Test
             Assert.True(response2.StatusCode == HttpStatusCode.OK);
             var str = await response2.Content.ReadAsStringAsync();
             var strU = str.ToUpper();
-            Assert.Contains("<HTML",strU);
+            Assert.Contains("<HTML", strU);
         }
 
 
@@ -164,19 +169,19 @@ namespace Tedd.ShortUrl.Test
             var stopwatch = new Stopwatch();
             var createCount = 10000;
             var visitCount = createCount * 10;
-            var created = new (AdminCreateRequestModel request, AdminCreateResponseModel response)[createCount];
-            var cc1 = createCount / 2;
+            var created = new(AdminCreateRequestModel request, AdminCreateResponseModel response)[createCount];
+            var cc1 = createCount >> 1;
             var cc2 = createCount - cc1;
             stopwatch.Start();
-            Parallel.For(0, cc1,() =>
-                {
-                    var server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
-                    var client = server.CreateClient();
-                    return (Server:server, Client:client);
-                },
+            Parallel.For(0, cc1, () =>
+                 {
+                     var server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
+                     var client = server.CreateClient();
+                     return (Server: server, Client: client);
+                 },
                 (i, pls, sc) =>
-            //for (var i = 0; i< cc1;i++)
-            {
+                //for (var i = 0; i< cc1;i++)
+                {
                 created[i] = sc.Client.CreateUrl(testAccessToken).Result;
                 return sc;
             }, (sc) =>
@@ -185,16 +190,17 @@ namespace Tedd.ShortUrl.Test
                     sc.Server.Dispose();
                 });
             var cc1TimeUsed = stopwatch.ElapsedMilliseconds;
-            Trace.WriteLine($"Round 1: Create time used for {cc1} urls: {cc1TimeUsed} ms total, {cc1TimeUsed/cc1} ms per create");
+            _output.WriteLine($"Round 1: Create time used for {cc1} urls: {(double)cc1TimeUsed} ms total, {(double)cc1TimeUsed / (double)cc1} ms per create");
             stopwatch.Restart();
-            Parallel.For(cc1, cc2, () =>
+
+            Parallel.For(cc1, createCount, () =>
                 {
                     var server = new TestServer(new WebHostBuilder().UseStartup<Startup>());
                     var client = server.CreateClient();
                     return (Server: server, Client: client);
                 },
                 (i, pls, sc) =>
-                    //for (var i = 0; i< cc1;i++)
+                //for (var i = 0; i< cc1;i++)
                 {
                     created[i] = sc.Client.CreateUrl(testAccessToken).Result;
                     return sc;
@@ -204,22 +210,20 @@ namespace Tedd.ShortUrl.Test
                     sc.Server.Dispose();
                 });
             var cc2TimeUsed = stopwatch.ElapsedMilliseconds;
-            Trace.WriteLine($"Round 2: Create time used for {cc2} urls: {cc2TimeUsed} ms total, {cc2TimeUsed/cc2} ms per create");
+            _output.WriteLine($"Round 2: Create time used for {cc2} urls: {(double)cc2TimeUsed} ms total, {(double)cc2TimeUsed / (double)cc2} ms per create");
 
-            var createTimeUsed = stopwatch.ElapsedMilliseconds;
-            Trace.WriteLine($"Create time used for {createCount} visits: {createTimeUsed} ms");
-            var diffMs = Math.Abs((cc1TimeUsed / cc1) - (cc2TimeUsed / cc2));
-            Trace.WriteLine($"Differential time between first and second batch: {diffMs} ms");
-            Assert.True(diffMs < 10);
+            var diffMs = Math.Abs(((double)cc1TimeUsed / (double)cc1) - ((double)cc2TimeUsed / (double)cc2));
+            _output.WriteLine($"Differential time between first and second batch: {diffMs} ms");
+            Assert.True(diffMs < 10D);
             //Assert.True(createTimeUsed < 1000);
 
             stopwatch.Restart();
 
             // Test URL
             var rnd = new Random();
-            
+
             //Parallel.For((long) 0, visitCount, async (i) =>
-            for (var i = 0; i<visitCount;i++)
+            for (var i = 0; i < visitCount; i++)
             {
                 var c = rnd.Next(0, createCount);
                 var data = created[c].request;
@@ -229,7 +233,7 @@ namespace Tedd.ShortUrl.Test
                 Assert.True(response2.Headers.Location.AbsoluteUri == new Uri(data.Url).AbsoluteUri);
             }//);
             var visitTimeUsed = stopwatch.ElapsedMilliseconds;
-            Trace.WriteLine($"Visit time used for {visitCount} visits: {visitTimeUsed} ms");
+            _output.WriteLine($"Visit time used for {visitCount} visits: {visitTimeUsed} ms");
 
             //Assert.True(visitTimeUsed < 1000);
         }

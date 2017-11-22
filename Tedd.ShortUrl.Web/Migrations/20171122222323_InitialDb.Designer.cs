@@ -11,8 +11,8 @@ using Tedd.ShortUrl.Web.Db;
 namespace Tedd.ShortUrl.Web.Migrations
 {
     [DbContext(typeof(ShortUrlDbContext))]
-    [Migration("20171118002143_Initial")]
-    partial class Initial
+    [Migration("20171122222323_InitialDb")]
+    partial class InitialDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -49,9 +49,7 @@ namespace Tedd.ShortUrl.Web.Migrations
                     b.Property<DateTime>("CreatedUtc")
                         .HasColumnType("smalldatetime");
 
-                    b.Property<string>("CreatorAccessToken")
-                        .IsRequired()
-                        .HasMaxLength(36);
+                    b.Property<int>("CreatorAccessTokenId");
 
                     b.Property<DateTime?>("ExpiresUtc")
                         .HasColumnType("smalldatetime");
@@ -67,6 +65,8 @@ namespace Tedd.ShortUrl.Web.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatorAccessTokenId");
+
                     b.HasIndex("Key")
                         .IsUnique()
                         .HasFilter("[Key] IS NOT NULL");
@@ -74,11 +74,40 @@ namespace Tedd.ShortUrl.Web.Migrations
                     b.ToTable("ShortUrl");
                 });
 
+            modelBuilder.Entity("Tedd.ShortUrl.Web.Models.ShortUrlTokenModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Admin");
+
+                    b.Property<string>("CreatorAccessToken")
+                        .IsRequired()
+                        .HasMaxLength(36);
+
+                    b.Property<bool>("Enabled");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorAccessToken")
+                        .IsUnique();
+
+                    b.ToTable("ShortUrlAccessTokens");
+                });
+
             modelBuilder.Entity("Tedd.ShortUrl.Web.Models.ShortUrlLogEntryModel", b =>
                 {
                     b.HasOne("Tedd.ShortUrl.Web.Models.ShortUrlModel", "ShortUrl")
                         .WithMany("VisitLog")
                         .HasForeignKey("ShortUrlId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Tedd.ShortUrl.Web.Models.ShortUrlModel", b =>
+                {
+                    b.HasOne("Tedd.ShortUrl.Web.Models.ShortUrlTokenModel", "CreatorAccessToken")
+                        .WithMany("ShortUrls")
+                        .HasForeignKey("CreatorAccessTokenId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

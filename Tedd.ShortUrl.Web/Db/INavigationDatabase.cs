@@ -10,5 +10,6 @@ namespace Tedd.ShortUrl.Web.Db
         Task<(bool Success, string Key)> AddData(ShortUrlModel data);
         Task<bool> LogAccess(string urlId, IPAddress remoteIp);
         Task Upgrade();
+        Task<ShortUrlTokenModel> GetAccessToken(string accessToken);
     }
 }
