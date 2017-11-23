@@ -25,7 +25,7 @@ Note: Admin means it can initialize/upgrade database and request metadata for ur
 POST /Admin/Create
 {
 	"AccessToken": "$$TESTTOKEN$!!$CHANGEME$$",
-	"Url": "http://mysite.com/$URL$",
+	"Url": "http://mysite.com/$KEY$",
 	"MetaData": "Put anything here, for example json",
 	"Expires": "2018-01-01 15:30"
 }
@@ -33,7 +33,7 @@ POST /Admin/Create
 
 Note:
 * `Expires` is optional, and should be given in UTC.
-* `$URL$` in the URL will be replaced with the shorturl key. You can use this to pass reference for target solutin to go back into ShortUrl system to pick up metadata. This way metadata can be passed in URL without going via user browser.
+* `$KEY$` in the URL will be replaced with the shorturl key. You can use this to pass reference for target solutin to go back into ShortUrl system to pick up metadata. This way metadata can be passed in URL without going via user browser.
 
 #### Response
 ```json
@@ -52,7 +52,7 @@ Note:
 GET /Admin/Get/key?AccessToken=$$TESTTOKEN$!!$CHANGEME$$
 {
 	"accessToken": "$$TESTTOKEN$!!$CHANGEME$$",
-	"url": "http://www.stackoverflow.com/$URL$",
+	"url": "http://www.stackoverflow.com/$KEY$",
 	"metaData": "Put anything here, for example json",
 	"expiresUtc": "2018-01-01 15:30"
 }

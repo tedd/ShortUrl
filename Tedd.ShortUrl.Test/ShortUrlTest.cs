@@ -16,35 +16,6 @@ using Xunit.Abstractions;
 
 namespace Tedd.ShortUrl.Test
 {
-    public static class ShortUrlTextExtensions
-    {
-        public static async Task<(AdminCreateRequestModel request, AdminCreateResponseModel response)> CreateUrl(this HttpClient client, string testAccessToken)
-        {
-            // Arrange
-
-
-            // Create URL
-            var data = new AdminCreateRequestModel()
-            {
-                AccessToken = testAccessToken,
-                Expires = DateTime.Now.AddHours(1),
-                MetaData = "123",
-                Url = "https://www.google.com/?q=$key$"
-            };
-
-            var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-
-            var response1 = await client.PostAsync("/Admin/Create", content);
-            response1.EnsureSuccessStatusCode();
-            var response1String = await response1.Content.ReadAsStringAsync();
-            var response1Object = JsonConvert.DeserializeObject<AdminCreateResponseModel>(response1String);
-            Assert.True(response1Object.Success);
-            Assert.True(!string.IsNullOrEmpty(response1Object.Key));
-            Assert.True(response1Object.Key.Length > 4);
-            Assert.True(response1Object.Url.ToUpperInvariant().Contains(response1Object.Key.ToUpperInvariant()));
-            return (request: data, response: response1Object);
-        }
-    }
     public class ShortUrlTest
     {
         private readonly ITestOutputHelper _output;
@@ -71,7 +42,7 @@ namespace Tedd.ShortUrl.Test
             // Test URL
             var response2 = await _client.GetAsync($"/{response1Object.Key}");
             Assert.True(response2.StatusCode == HttpStatusCode.Redirect);
-            Assert.True(response2.Headers.Location.AbsoluteUri == new Uri(data.Url).AbsoluteUri);
+            Assert.True(response2.Headers.Location.AbsoluteUri == new Uri(data.Url.Replace("$key$", response1Object.Key)).AbsoluteUri);
         }
 
         [Fact]
@@ -95,7 +66,7 @@ namespace Tedd.ShortUrl.Test
             var data = new AdminCreateRequestModel()
             {
                 AccessToken = "INVALID",
-                Expires = DateTime.Now.AddHours(1),
+                ExpiresUtc = DateTime.Now.AddHours(1),
                 MetaData = "123",
                 Url = "https://www.google.com"
             };
@@ -182,13 +153,13 @@ namespace Tedd.ShortUrl.Test
                 (i, pls, sc) =>
                 //for (var i = 0; i< cc1;i++)
                 {
-                created[i] = sc.Client.CreateUrl(testAccessToken).Result;
-                return sc;
-            }, (sc) =>
-                {
-                    sc.Client.Dispose();
-                    sc.Server.Dispose();
-                });
+                    created[i] = sc.Client.CreateUrl(testAccessToken).Result;
+                    return sc;
+                }, (sc) =>
+                    {
+                        sc.Client.Dispose();
+                        sc.Server.Dispose();
+                    });
             var cc1TimeUsed = stopwatch.ElapsedMilliseconds;
             _output.WriteLine($"Round 1: Create time used for {cc1} urls: {(double)cc1TimeUsed} ms total, {(double)cc1TimeUsed / (double)cc1} ms per create");
             stopwatch.Restart();

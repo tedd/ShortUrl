@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json;
 
 namespace Tedd.ShortUrl.Web.Models
 {
@@ -20,7 +21,7 @@ namespace Tedd.ShortUrl.Web.Models
         public string MetaData { get; set; }
 
         public int CreatorAccessTokenId { get; set; }
-
+        [JsonIgnore]
         public ShortUrlTokenModel CreatorAccessToken { get; set; }
 
         [Required]

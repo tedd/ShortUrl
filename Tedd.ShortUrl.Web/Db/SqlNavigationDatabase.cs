@@ -86,7 +86,7 @@ namespace Tedd.ShortUrl.Web.Db
         public async Task<ShortUrlTokenModel> GetAccessToken(string accessToken)
         {
             // TODO: This can be cached for a few minutes...?
-            return await _shortUrlDbContext.ShortUrlAccessTokens.Where(at => at.CreatorAccessToken == accessToken && at.Enabled).FirstAsync();
+            return await _shortUrlDbContext.ShortUrlAccessTokens.Where(at => at.CreatorAccessToken == accessToken && at.Enabled).FirstOrDefaultAsync();
         }
     }
 }

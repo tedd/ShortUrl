@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace Tedd.ShortUrl.Web.Models
 {
@@ -11,6 +12,7 @@ namespace Tedd.ShortUrl.Web.Models
         [Required]
         [MaxLength(36)]
         public string CreatorAccessToken { get; set; }
+        [JsonIgnore]
         public List<ShortUrlModel> ShortUrls { get; set; }
         [Required]
         public bool Enabled { get; set; }

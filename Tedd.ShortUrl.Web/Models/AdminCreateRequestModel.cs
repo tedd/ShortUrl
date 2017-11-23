@@ -6,6 +6,6 @@ namespace Tedd.ShortUrl.Web.Models
         public string AccessToken { get; set; }
         public string Url { get; set; }
         public string MetaData { get; set; }
-        public DateTime? Expires { get; set; }
+        public DateTime? ExpiresUtc { get; set; }
     }
 }
