@@ -33,7 +33,7 @@ POST /Admin/Create
 
 Note:
 * `Expires` is optional, and should be given in UTC.
-* `$KEY$` in the URL will be replaced with the shorturl key. You can use this to pass reference for target solutin to go back into ShortUrl system to pick up metadata. This way metadata can be passed in URL without going via user browser.
+* `$KEY$` in the URL will be replaced with the shorturl key. You can use this to pass reference for target solution to go back into ShortUrl system to pick up metadata. This way metadata can be passed in URL without going via user browser.
 
 #### Response
 ```json
