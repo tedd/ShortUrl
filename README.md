@@ -1,3 +1,17 @@
+# DEPRECATED
+There is a newer version at: https://github.com/tedd/Tedd.ShortUrl
+
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+
 # ShortUrl
 ASP.Net Core C¤ implementation of an URL shortener much like "tinyurl.com", "bitl.y", "goo.gl", "ow.ly", etc...
 
